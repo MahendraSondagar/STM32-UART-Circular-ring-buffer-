@@ -43,6 +43,16 @@
 						"      Coded By: Mahendra Sondagar          \r\n"\
 						"     <mahendrasondagar08@gmail.com>        \r\n"\
 						"-------------------------------------------\r\n"
+
+#define HELP_MENU       "<h> Press the following keys to get the action\r\n" \
+	                    "<1> Serial print string\r\n"                        \
+						"<2> Serial print Initger in base\r\n"               \
+						"<3> Serial put hex\r\n"                             \
+						"<4> Serial print hex long\r\n"                      \
+						"<5> Serial print octal\r\n"                         \
+						"<6> Serial print Binary\r\n"                        \
+						"<7> Echo back for 10 sec\r\n"                       \
+						"<8> Echo back till enter\r\n"
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -59,6 +69,8 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+typedef void (*Menue_t[8])(void);
+
 
 /* USER CODE END PFP */
 
@@ -67,6 +79,81 @@ static void MX_USART1_UART_Init(void);
  char rx2_temp[1]={0};
  char rx1_temp[1]={0};
 
+ void PrintHelp(void)
+ {
+	 Serial.PrintString(HELP_MENU, DEBUG_PORT);
+ }
+ void PrintString(void)
+ {
+	 Serial.PrintString("Hello world\r\n", DEBUG_PORT);
+ }
+
+ void PrintIntInBase(void)
+ {
+   Serial.PrintIntegerInBase(12, 2, DEBUG_PORT);
+ }
+
+ void PutHex(void)
+ {
+  Serial.Puthex(12, DEBUG_PORT);
+ }
+
+ void PrintHexLong(void)
+ {
+  Serial.PrintHexlong(12536, DEBUG_PORT);
+ }
+
+ void PrintOctal(void)
+ {
+  Serial.PrintOctal(15, DEBUG_PORT);
+ }
+
+ void PrintBinary(void)
+ {
+  Serial.PrintBinary(125, DEBUG_PORT);
+ }
+
+ void PrintEcho(void)
+ {
+  unsigned long previous = milis();
+  while(milis()-previous<10000)
+  {
+	  if(Serial.Available(DEBUG_PORT)>0)
+	  {
+		  char var = Serial.Read(DEBUG_PORT);
+		  Serial.Write(var, DEBUG_PORT);
+	  }
+	  /* to avoid overflow */
+	  if(milis()<previous) previous= milis();
+  }
+  Serial.PrintString("timeout!\r\n", DEBUG_PORT);
+ }
+
+ void PrintEchoCR_LF(void)
+ {
+	 char buffer[100]= {0};
+	 uint8_t i=0;
+	 unsigned long previous = milis();
+	   while(milis()-previous<10000)
+	   {
+	 	  if(Serial.Available(DEBUG_PORT)>0)
+	 	  {
+	 		  buffer[i] = Serial.Read(DEBUG_PORT);
+	 		  if(buffer[i]=='\n')
+	 		  {
+	 			 buffer[i] =NULL;
+	 			 Serial.PrintString(buffer, DEBUG_PORT);
+	 		  }
+	 		  else
+	 		  {
+	 			 i++;
+	 		  }
+	 	  }
+	 	  /* to avoid overflow */
+	 	  if(milis()<previous) previous= milis();
+	   }
+     Serial.PrintString("timeout!\r\n", DEBUG_PORT);
+ }
 /* USER CODE END 0 */
 
 /**
@@ -76,6 +163,7 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  Menue_t Menue ={PrintHelp,PrintString, PrintIntInBase,PutHex,PrintHexLong,PrintOctal,PrintBinary,PrintEcho, PrintEchoCR_LF};
 
   /* USER CODE END 1 */
 
@@ -100,6 +188,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Serial.begin(115200, DEBUG_PORT);
   Serial.PrintString(WELCOME_MSG,DEBUG_PORT);
+  Serial.PrintString(HELP_MENU, DEBUG_PORT);
 
   /* USER CODE END 2 */
 
@@ -111,8 +200,42 @@ int main(void)
     /* USER CODE BEGIN 3 */
 		if(Serial.Available(DEBUG_PORT)>0)
 		{
-			char temp= Serial.Read(DEBUG_PORT);
-			Serial.Write(temp, DEBUG_PORT);
+			char cmd = Serial.Read(DEBUG_PORT);
+			switch (cmd)
+			{
+			case 'h':
+							(Menue[0]());
+							break;
+
+			case '1':
+							(Menue[1]());
+							break;
+			case '2':
+							(Menue[2]());
+							break;
+			case '3':
+							(Menue[3]());
+							break;
+			case '4':
+							(Menue[4]());
+							break;
+			case '5':
+							(Menue[5]());
+							break;
+			case '6':
+							(Menue[6]());
+							break;
+			case '7':
+							(Menue[7]());
+							break;
+
+			case '8':
+							(Menue[8]());
+							break;
+			default :
+				break;
+
+			}
 		}
 	}
   /* USER CODE END 3 */
